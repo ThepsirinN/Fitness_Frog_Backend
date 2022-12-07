@@ -1,0 +1,34 @@
+{
+  "name": "fitness-frog-backend",
+  "version": "1.0.0",
+  "description": "Backend for Fitness Frog",
+  "main": "app.js",
+  "scripts": {
+    "start": "nodemon app.js",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ThepsirinN/Fitness_Frog_Backend.git"
+  },
+  "keywords": [
+    "Backend",
+    "Fitness"
+  ],
+  "author": "Fitness Frog Group",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/ThepsirinN/Fitness_Frog_Backend/issues"
+  },
+  "homepage": "https://github.com/ThepsirinN/Fitness_Frog_Backend#readme",
+  "dependencies": {
+    "bcrypt": "^5.1.0",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "mongoose": "^6.7.5"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
