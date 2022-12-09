@@ -1,52 +1,7 @@
 const UserModel = require("../model/UserModel");
 const bcrypt = require("bcrypt");
+const { refreshTk } = require("../config");
 const jwt = require("jsonwebtoken");
-
-/* exports.showAllUser = async (req, res, next) => {
-  try {
-    const getUser = await UserModel.find({});
-    if (!getUser || getUser.length === 0) {
-      return res.status(404).send("Not Found!");
-    }
-    const resultArr = [];
-    const getUserLength = getUser.length;
-    getUser.forEach(async (element) => {
-      const getUserID = element._id.toString();
-      const getUserDetail = await UserDetailModel.findOne({
-        userID: getUserID,
-      });
-      if (!getUserDetail || getUserDetail.length === 0) {
-        return res.status(404).send("Not Found!");
-      }
-      resultArr.push({ user: element, userDetail: getUserDetail });
-      if (resultArr.length === getUserLength) {
-        return res.status(200).send(resultArr);
-      }
-    });
-  } catch (err) {
-    console.log(err);
-    return res.status(400).send(err);
-  }
-}; */
-
-/* exports.showById = async (req, res, next) => {
-  try {
-    const { id } = req.params;
-    const getUserById = await UserModel.findById(id);
-    if (!getUserById || getUserById.length === 0) {
-      return res.status(404).send("Not Found!");
-    }
-    const getUserDetail = await UserDetailModel.findOne({userID:id});
-    if (!getUserDetail || getUserDetail.length === 0) {
-      return res.status(404).send("Not Found!");
-    }
-    return res.status(200).send(getUserDetail)
-    //const {fullName} = getUserDetail
-    //return res.status(200).send({fullName})
-  } catch (err) {
-    return res.status(400).send(err);
-  }
-}; */
 
 exports.createUser = async (req, res, next) => {
   try {
@@ -82,19 +37,19 @@ exports.createUser = async (req, res, next) => {
 
     // check pass is not null
     if (pass === "") {
-      return res.status(400).send({ msg: "Please provide Password" });
+      return res.status(400).json({ msg: "Please provide Password" });
     }
 
     // check confirmPass is not null
     if (confirmPass === "") {
-      return res.status(400).send({ msg: "Please provide Confirm-Password" });
+      return res.status(400).json({ msg: "Please provide Confirm-Password" });
     }
 
     // check pass === confirmPass
     if (pass !== confirmPass) {
       return res
         .status(400)
-        .send({ msg: "Password and Confirm-Password not match!" });
+        .json({ msg: "Password and Confirm-Password not match!" });
     }
 
     const password = bcrypt.hashSync(pass, 10);
@@ -105,12 +60,104 @@ exports.createUser = async (req, res, next) => {
     });
     if (!createUser) {
       return res.status(400).json({ msg: "Can't Create User!" });
+    } else {
+      //   create JWT token
+      const userHash = bcrypt.hashSync(username, 10);
+      const token = jwt.sign(
+        {
+          userHash,
+        },
+        refreshTk,
+        { expiresIn: "24h" }
+      );
+
+      const updateUserToken = await UserModel.findOneAndUpdate(
+        { username: username },
+        { refresh_token: token },
+        {
+          returnOriginal: false,
+        }
+      );
+
+      if (!updateUserToken) {
+        return res.status(400).json({ msg: "Cannot Register" });
+      }
+
+      const expTime = 24 * 60 * 60 * 1000;
+
+      return res.status(200).json({
+        msg: "Registration Successful.",
+        refreshToken: { key: token, exp: expTime },
+      });
     }
-    return res.status(200).json({ msg: "Registration Successful." });
   } catch (err) {
     console.log(err);
     return res.status(400).send(err);
   }
+};
+
+exports.login = async (req, res, next) => {
+  try {
+    const { username, pass } = req.body;
+
+    // check user is not null
+    if (username === "") {
+      return res.status(400).json({ msg: "You must Enter Username." });
+    }
+
+    // check pass is not null
+    if (pass === "") {
+      return res.status(400).json({ msg: "Please provide Password" });
+    }
+
+    // check username and pwd match
+
+    const getUsername = await UserModel.findOne({ username: username });
+    if (getUsername && getUsername.length !== 0) {
+      // get alldata in Obj
+      // optional count login time
+      /* 
+      {
+        username : ....,
+        email : ....,
+        password : $2$10asdijfioarjoqwejkr98q23fjushuisdfosdfh0213901289308
+      }
+    */
+      // getUsername.password is hashing in document
+      let matchUser = bcrypt.compareSync(pass, getUsername.password);
+      if (matchUser) {
+        const userHash = bcrypt.hashSync(username, 10);
+        const token = jwt.sign(
+          {
+            userHash,
+          },
+          refreshTk,
+          { expiresIn: "24h" }
+        );
+
+        const expTime = 24 * 60 * 60 * 1000;
+        return res.status(200).json({
+          msg: "Login successful",
+          refreshToken: { key: token, exp: expTime },
+        });
+      }
+      return res
+        .status(400)
+        .json({ msg: "Password is incorrect, please try again." });
+    }
+    return res.status(400).json({ msg: "No User found!" });
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send(err);
+  }
+};
+
+exports.bcryptCheck = async (req, res, next) => {
+  const { user, userHash } = req.body;
+  if (bcrypt.compareSync(user, userHash)) {
+    return res.status(200).json({ status: true });
+  }
+  return res.status(401).json({ status: false });
 };
 
 /* back up for create user detail */

@@ -44,7 +44,7 @@ const activitySchema = new Schema({
     required: true,
     ref: "User",
   },
-  activity : [activityDetailed]
+  activitys : [activityDetailed]
 });
 
 const activityModel = mongoose.model("Activity", activitySchema);

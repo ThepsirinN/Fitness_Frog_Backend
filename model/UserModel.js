@@ -14,6 +14,7 @@ const userSchema = new Schema({
   username: { type: String, unique: true, required: true },
   email: { type: String, unique: true, required: true },
   password: String,
+  refresh_token: { type: String, unique: true, required: true, default: 0 },
 });
 
 const UserModel = mongoose.model("User", userSchema);
