@@ -24,6 +24,7 @@ const userDetailSchema = new Schema({
   weight: { type: Number, required: true },
   goal: { type: Number, required: true },
   image: { type: String, required: true },
+  status: { type: Number, required: true, default: 1 },
 });
 
 const UserDetailModel = mongoose.model("UserDetail", userDetailSchema);

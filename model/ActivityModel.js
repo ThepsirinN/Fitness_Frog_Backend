@@ -18,7 +18,7 @@ const activityDetailed = new Schema({
     type: String,
     required: true,
   },
-  activity: {
+  activityType: {
     type: Number,
     required: true,
   },
@@ -44,7 +44,7 @@ const activitySchema = new Schema({
     required: true,
     ref: "User",
   },
-  activitys : [activityDetailed]
+  activities : [activityDetailed]
 });
 
 const activityModel = mongoose.model("Activity", activitySchema);

@@ -1,7 +1,9 @@
 const UserModel = require("../model/UserModel");
 const bcrypt = require("bcrypt");
-const { refreshTk } = require("../config");
+/* const crypto = require("crypto") */
+const { refreshTk, jwtExpTime /* cryptoSecret */ } = require("../config");
 const jwt = require("jsonwebtoken");
+/* const sha256Hasher  = crypto.createHmac("sha256",cryptoSecret) */
 
 exports.createUser = async (req, res, next) => {
   try {
@@ -68,7 +70,7 @@ exports.createUser = async (req, res, next) => {
           userHash,
         },
         refreshTk,
-        { expiresIn: "24h" }
+        { expiresIn: `${jwtExpTime}h` }
       );
 
       const updateUserToken = await UserModel.findOneAndUpdate(
@@ -83,7 +85,7 @@ exports.createUser = async (req, res, next) => {
         return res.status(400).json({ msg: "Cannot Register" });
       }
 
-      const expTime = 24 * 60 * 60 * 1000;
+      const expTime = jwtExpTime * 60 * 60 * 1000;
 
       return res.status(200).json({
         msg: "Registration Successful.",
@@ -132,10 +134,10 @@ exports.login = async (req, res, next) => {
             userHash,
           },
           refreshTk,
-          { expiresIn: "24h" }
+          { expiresIn: `${jwtExpTime}h` }
         );
 
-        const expTime = 24 * 60 * 60 * 1000;
+        const expTime = jwtExpTime * 60 * 60 * 1000;
         return res.status(200).json({
           msg: "Login successful",
           refreshToken: { key: token, exp: expTime },
@@ -152,12 +154,65 @@ exports.login = async (req, res, next) => {
   }
 };
 
-exports.bcryptCheck = async (req, res, next) => {
-  const { user, userHash } = req.body;
-  if (bcrypt.compareSync(user, userHash)) {
+exports.checkAuth = async (req, res, next) => {
+  try {
+    //   get the token from the authorization header
+    const token = await req.headers.authorization.split(" ")[1];
+    const userGet = await req.headers.user;
+
+    const decodedToken = await jwt.verify(token, refreshTk);
+
+    if (bcrypt.compareSync(userGet, decodedToken.userHash)) {
+      //check if the token matches the supposed origin
+
+      // retrieve the user details of the logged in user
+      const decodeJWT = await decodedToken;
+
+      // pass the the user down to the endpoints here
+      req.user = userGet;
+      req.decodeJWT = decodeJWT;
+
+      // update new token
+      const userData = await UserModel.findOne({ username: userGet });
+      if (userData) {
+        const userHash = bcrypt.hashSync(userGet, 10);
+        const newToken = jwt.sign(
+          {
+            userHash,
+          },
+          refreshTk,
+          { expiresIn: `${jwtExpTime}h` }
+        );
+        const expTime = jwtExpTime * 60 * 60 * 1000;
+        const updateToken = await UserModel.findOneAndUpdate(
+          { username: userGet },
+          { refresh_token: newToken },
+          {
+            returnOriginal: false,
+          }
+        );
+        if (updateToken) {
+          return res.status(200).json({
+            status: true,
+            userGet,
+            refreshToken: { key: newToken, exp: expTime },
+          });
+        }
+      }
+    }
+    // pass down functionality to the endpoint
+    /* next(); */
+  } catch (error) {
+    return res.status(401).json({
+      status: false,
+      error: new Error("Invalid request!"),
+    });
+  }
+
+  /* if (bcrypt.compareSync(user, userHash)) {
     return res.status(200).json({ status: true });
   }
-  return res.status(401).json({ status: false });
+  return res.status(401).json({ status: false }); */
 };
 
 /* back up for create user detail */

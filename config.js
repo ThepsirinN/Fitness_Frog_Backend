@@ -4,7 +4,8 @@ const config = {
     port : process.env.PORT,
     mongo : process.env.MONGOENDPOINT,
     allowCORS : process.env.ALLOW_CORS,
-    accessTk : process.env.ACCESS_TOKEN_SECRET,
+    jwtExpTime : process.env.JWT_EXP_TIME,
+    cryptoSecret : process.env.CRYPTO_SECRET,
     refreshTk : process.env.REFRESH_TOKEN_SECRET,
 }
 
