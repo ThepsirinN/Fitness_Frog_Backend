@@ -1,6 +1,6 @@
 const UserActivityModel = require("../model/ActivityModel");
-const userCheck = require("./utility/userCheckServices");
-const filterBadActivity = require("./utility/badActivityCheckservice");
+const userCheck = require("../utility/userCheckServices");
+const filterBadActivity = require("../utility/badActivityCheckService");
 
 exports.createUserActivity = async (req, res, next) => {
   try {

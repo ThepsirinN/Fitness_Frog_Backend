@@ -55,16 +55,18 @@ exports.createUser = async (req, res, next) => {
     }
 
     const password = bcrypt.hashSync(pass, 10);
+    const userHash = bcrypt.hashSync(username, 10);
     const createUser = await UserModel.create({
       username,
+      userHash,
       email,
       password,
     });
+
     if (!createUser) {
       return res.status(400).json({ msg: "Can't Create User!" });
     } else {
       //   create JWT token
-      const userHash = bcrypt.hashSync(username, 10);
       const token = jwt.sign(
         {
           userHash,
@@ -89,7 +91,7 @@ exports.createUser = async (req, res, next) => {
 
       return res.status(200).json({
         msg: "Registration Successful.",
-        refreshToken: { key: token, exp: expTime },
+        refreshToken: { key: token, user: userHash, exp: expTime },
       });
     }
   } catch (err) {
@@ -138,11 +140,21 @@ exports.login = async (req, res, next) => {
         );
 
         const expTime = jwtExpTime * 60 * 60 * 1000;
-        return res.status(200).json({
-          msg: "Login successful",
-          refreshToken: { key: token, exp: expTime },
-        });
+        const updateToken = await UserModel.findOneAndUpdate(
+          { username: username },
+          { userHash: userHash, refresh_token: token },
+          {
+            returnOriginal: false,
+          }
+        );
+        if (updateToken) {
+          return res.status(200).json({
+            msg: "Login successful",
+            refreshToken: { key: token, user: userHash, exp: expTime },
+          });
+        }
       }
+
       return res
         .status(400)
         .json({ msg: "Password is incorrect, please try again." });
@@ -158,7 +170,16 @@ exports.checkAuth = async (req, res, next) => {
   try {
     //   get the token from the authorization header
     const token = await req.headers.authorization.split(" ")[1];
-    const userGet = await req.headers.user;
+    const user = await req.headers.user;
+
+    const getUserName = await UserModel.findOne({ userHash: user });
+    if (!getUserName) {
+      return res
+        .status(401)
+        .json({ msg: "You're Hacker!. See you in the jail~" });
+    }
+
+    const userGet = getUserName.username;
 
     const decodedToken = await jwt.verify(token, refreshTk);
 
@@ -169,8 +190,8 @@ exports.checkAuth = async (req, res, next) => {
       const decodeJWT = await decodedToken;
 
       // pass the the user down to the endpoints here
-      req.user = userGet;
-      req.decodeJWT = decodeJWT;
+      // req.user = userGet;
+      // req.decodeJWT = decodeJWT;
 
       // update new token
       const userData = await UserModel.findOne({ username: userGet });
@@ -186,7 +207,7 @@ exports.checkAuth = async (req, res, next) => {
         const expTime = jwtExpTime * 60 * 60 * 1000;
         const updateToken = await UserModel.findOneAndUpdate(
           { username: userGet },
-          { refresh_token: newToken },
+          { userHash: userHash, refresh_token: newToken },
           {
             returnOriginal: false,
           }
@@ -194,7 +215,7 @@ exports.checkAuth = async (req, res, next) => {
         if (updateToken) {
           return res.status(200).json({
             status: true,
-            userGet,
+            userHash,
             refreshToken: { key: newToken, exp: expTime },
           });
         }
@@ -215,21 +236,50 @@ exports.checkAuth = async (req, res, next) => {
   return res.status(401).json({ status: false }); */
 };
 
-/* back up for create user detail */
-/* 
-const userId = createUser._id.toString();
-    const { fullName, gender, age, height, weight, goal, image } = req.body;
-    const createUserDetail = await UserDetailModel.create({
-      userID: userId,
-      fullName,
-      gender,
-      age,
-      height,
-      weight,
-      goal,
-      image,
-    });
-    if (!createUserDetail) {
-      return res.status(400).send("Bad Request!");
+exports.userLogout = async (req,res,next) => {
+  try {
+    const { user, refreshToken } = req.body;
+
+    const getUserName = await UserModel.findOne({ userHash: user });
+    if (!getUserName) {
+      return res
+        .status(401)
+        .json({ msg: "You're Hacker!. See you in the jail~" });
     }
-*/
+
+    const userGet = getUserName.username;
+
+    const decodedToken = await jwt.verify(refreshToken, refreshTk);
+
+    // update new token
+    const userData = await UserModel.findOne({ username: userGet });
+    if (userData) {
+      const userHash = bcrypt.hashSync(userGet, 10);
+      const newToken = jwt.sign(
+        {
+          userHash,
+        },
+        refreshTk,
+        { expiresIn: `${0}h` }
+      );
+      const expTime = 0 * 60 * 60 * 1000;
+      const updateToken = await UserModel.findOneAndUpdate(
+        { username: userGet },
+        { userHash: userHash, refresh_token: newToken },
+        {
+          returnOriginal: false,
+        }
+      );
+      if (updateToken) {
+        return res.status(200).json({
+          msg: "Logout Success",
+        });
+      }
+    }
+  } catch (error) {
+    return res.status(401).json({
+      status: false,
+      error: new Error("Invalid request!"),
+    });
+  }
+};

@@ -12,8 +12,9 @@ mongoose
 
 const userSchema = new Schema({
   username: { type: String, unique: true, required: true },
+  userHash: { type: String, unique: true, required: true },
   email: { type: String, unique: true, required: true },
-  password: String,
+  password: { type: String, unique: true, required: true },
   refresh_token: { type: String, unique: true, required: true, default: 0 },
 });
 

@@ -10,6 +10,7 @@ const userController = require("../controller/userController")
 routes.post("/createUser",userController.createUser)
 routes.post("/checkUser",userController.login)
 routes.get("/checkAuth",userController.checkAuth)
+routes.put("/logout",userController.userLogout)
 
 
 module.exports = routes

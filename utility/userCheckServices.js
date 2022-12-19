@@ -1,9 +1,9 @@
-const UserModel = require("../../model/UserModel");
+const UserModel = require("../model/UserModel");
 
 const userCheck = async (user, refreshToken) => {
   try {
     const getUserData = await UserModel.findOne({
-      username: user,
+      userHash: user,
       refresh_token: refreshToken,
     });
 

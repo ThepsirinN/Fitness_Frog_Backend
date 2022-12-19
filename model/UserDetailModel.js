@@ -19,6 +19,7 @@ const userDetailSchema = new Schema({
   },
   fullName: { type: String, unique: true, required: true },
   gender: { type: Number, required: true },
+  DOB: { type: Date, required: true },
   age: { type: Number, required: true },
   height: { type: Number, required: true },
   weight: { type: Number, required: true },

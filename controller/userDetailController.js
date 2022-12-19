@@ -1,6 +1,6 @@
 const UserDetailModel = require("../model/UserDetailModel");
-const UserModel = require("../model/UserModel");
-
+const userCheck = require("../utility/userCheckServices");
+const filterBadUserDeatail = require("../utility/badUserDetailCheckServices");
 exports.createUserDetail = async (req, res, next) => {
   try {
     const {
@@ -15,54 +15,24 @@ exports.createUserDetail = async (req, res, next) => {
       image,
     } = req.body;
 
-    const getUserData = await UserModel.findOne({
-      username: username,
-      refresh_token: refreshToken,
-    });
+    const getUserData = await userCheck(username, refreshToken);
     if (!getUserData) {
       return res
         .status(401)
         .json({ msg: "You're Hacker!. See you in the jail~" });
     }
 
-    if (fullName === "") {
-      return res.status(400).json({ msg: "Please Provide Fullname" });
-    }
+    const filterBad = filterBadUserDeatail({
+      fullName,
+      gender,
+      age,
+      height,
+      weight,
+      goal,
+    });
 
-    if (gender.value == 0) {
-      return res.status(400).json({ msg: "Please Select your gender" });
-    }
-
-    if (age === "") {
-      return res.status(400).json({ msg: "Please Provide your age" });
-    }
-
-    const today = new Date();
-    const birthDate = new Date(age);
-    let realAge = today.getFullYear() - birthDate.getFullYear();
-    let m = today.getMonth() - birthDate.getMonth();
-    if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) {
-      realAge = realAge - 1;
-    }
-
-    if(realAge<0){
-        return res.status(400).json({ msg: "Incorrect date of birth" });
-    }
-
-    if (height === "") {
-      return res.status(400).json({ msg: "Please Provide your height" });
-    }
-    if (weight === "") {
-      return res.status(400).json({ msg: "Please Provide your weight" });
-    }
-    if (goal === "") {
-      return res
-        .status(400)
-        .json({ msg: "Please Provide Days Amount of your Goal" });
-    }
-
-    if (goal < 1 ){
-        return res.status(400).json({ msg: "Your goal must be at least 1 day" });
+    if (filterBad.status && filterBad.msg) {
+      return res.status(filterBad.status).json({ msg: filterBad.msg });
     }
 
     const userID = getUserData._id.toString();
@@ -71,7 +41,8 @@ exports.createUserDetail = async (req, res, next) => {
       userID,
       fullName,
       gender: gender.value,
-      age:realAge,
+      DOB: age,
+      age: filterBad[1],
       height,
       weight,
       goal,
@@ -83,6 +54,92 @@ exports.createUserDetail = async (req, res, next) => {
     return res.status(200).json({
       msg: "Create User Detail Successful.",
     });
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send(err);
+  }
+};
+
+exports.getUserDetail = async (req, res, next) => {
+  try {
+    const { user, refreshtoken } = req.headers;
+    const getUserData = await userCheck(user, refreshtoken);
+    if (!getUserData) {
+      return res
+        .status(401)
+        .json({ msg: "You're Hacker!. See you in the jail~" });
+    }
+
+    const userID = getUserData._id.toString();
+
+    const userDetailData = await UserDetailModel.findOne({ userID: userID });
+    if (!userDetailData) {
+      return res.status(200).json({ msg: "You don't have user data!" });
+    }
+    return res.status(200).json({ msg: "Ok", data: userDetailData });
+  } catch (err) {
+    console.log(err);
+    return res.status(400).send(err);
+  }
+};
+
+exports.editUserDetail = async (req, res, next) => {
+  try {
+    const {
+      username,
+      refreshToken,
+      fullName,
+      gender,
+      age,
+      height,
+      weight,
+      goal,
+      image,
+    } = req.body;
+    const getUserData = await userCheck(username, refreshToken);
+
+    if (!getUserData) {
+      return res
+        .status(401)
+        .json({ msg: "You're Hacker!. See you in the jail~" });
+    }
+
+    const userID = getUserData._id.toString();
+
+    const filterBad = filterBadUserDeatail({
+      fullName,
+      gender,
+      age,
+      height,
+      weight,
+      goal,
+    });
+
+    if (filterBad.status && filterBad.msg) {
+      return res.status(filterBad.status).json({ msg: filterBad.msg });
+    }
+
+    // match userID with userdetail database
+    const UpdateUserDetail = await UserDetailModel.findOneAndUpdate(
+      { userID: userID },
+      {
+        fullName: fullName,
+        gender: gender.value,
+        DOB: age,
+        age: filterBad[1],
+        height: height,
+        weight: weight,
+        goal: goal,
+        image: image,
+      },
+      { returnOriginal:false }
+    );
+
+    if(!UpdateUserDetail){
+      return res.status(400).json({ msg: "Can't update user data" })
+    }
+
+    return res.status(200).json({ msg: "Successfully Edit User Detail." });
   } catch (err) {
     console.log(err);
     return res.status(400).send(err);
