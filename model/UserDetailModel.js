@@ -24,7 +24,6 @@ const userDetailSchema = new Schema({
   height: { type: Number, required: true },
   weight: { type: Number, required: true },
   goal: { type: Number, required: true },
-  image: { type: String, required: true },
   status: { type: Number, required: true, default: 1 },
 });
 

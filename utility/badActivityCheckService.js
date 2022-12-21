@@ -1,10 +1,10 @@
 const filterBadActivity = (activityObj) => {
 
-    if (activityObj.name === "") {
+    if (activityObj.name.trim() === "") {
       return { status: 400, msg: "Please provide Activity name!" };
     }
   
-    if (activityObj.description === "") {
+    if (activityObj.description.trim() === "") {
       return { status: 400, msg: "Please provide Activity Description!" };
     }
   
@@ -16,11 +16,11 @@ const filterBadActivity = (activityObj) => {
       return { status: 400, msg: "Please select activity from the list!" };
     }
   
-    if (activityObj.startDate === "") {
+    if (activityObj.startDate.trim() === "") {
       return { status: 400, msg: "Please select Starting Date!" };
     }
   
-    if (activityObj.endDate === "") {
+    if (activityObj.endDate.trim() === "") {
       return { status: 400, msg: "Please select End Date!" };
     }
   

@@ -1,6 +1,6 @@
 const filterBadUserDeatail = (activityObj) => {
 
-    if (activityObj.fullName === "") {
+    if (activityObj.fullName.trim() === "") {
         return {status:400, msg: "Please Provide Fullname"};
       }
   
@@ -8,7 +8,7 @@ const filterBadUserDeatail = (activityObj) => {
         return {status:400, msg: "Please Select your gender" };
       }
   
-      if (activityObj.age === "") {
+      if (activityObj.age.trim() === "") {
         return {status: 400, msg: "Please Provide your age" };
       }
   
@@ -23,14 +23,15 @@ const filterBadUserDeatail = (activityObj) => {
       if (realAge < 0) {
         return {status: 400,  msg: "Incorrect date of birth" };
       }
+
   
-      if (activityObj.height === "") {
+      if (String(activityObj.height).trim() === "") {
         return {status: 400,  msg: "Please Provide your height" };
       }
-      if (activityObj.weight === "") {
+      if (String(activityObj.weight).trim() === "") {
         return {status: 400,  msg: "Please Provide your weight" };
       }
-      if (activityObj.goal === "") {
+      if (String(activityObj.goal).trim() === "") {
         return {status: 400,  msg: "Please Provide Days Amount of your Goal" };
       }
   

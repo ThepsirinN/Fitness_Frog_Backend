@@ -1,6 +1,7 @@
 const UserDetailModel = require("../model/UserDetailModel");
 const userCheck = require("../utility/userCheckServices");
 const filterBadUserDeatail = require("../utility/badUserDetailCheckServices");
+
 exports.createUserDetail = async (req, res, next) => {
   try {
     const {
@@ -12,7 +13,6 @@ exports.createUserDetail = async (req, res, next) => {
       height,
       weight,
       goal,
-      image,
     } = req.body;
 
     const getUserData = await userCheck(username, refreshToken);
@@ -46,7 +46,6 @@ exports.createUserDetail = async (req, res, next) => {
       height,
       weight,
       goal,
-      image,
     });
     if (!createUserDetail) {
       return res.status(400).json({ msg: "Can't Create User Detail!" });
@@ -94,7 +93,6 @@ exports.editUserDetail = async (req, res, next) => {
       height,
       weight,
       goal,
-      image,
     } = req.body;
     const getUserData = await userCheck(username, refreshToken);
 
@@ -130,7 +128,6 @@ exports.editUserDetail = async (req, res, next) => {
         height: height,
         weight: weight,
         goal: goal,
-        image: image,
       },
       { returnOriginal:false }
     );
