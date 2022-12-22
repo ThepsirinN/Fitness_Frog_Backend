@@ -10,7 +10,7 @@ exports.createUser = async (req, res, next) => {
     const { username, email, pass, confirmPass } = req.body;
 
     // check email is not null
-    if (email.trim() === "") {
+    if (String(email).trim() === "") {
       return res.status(400).json({ msg: "You must enter Email." });
     }
 
@@ -27,7 +27,7 @@ exports.createUser = async (req, res, next) => {
     }
 
     // check user is not null
-    if (username.trim() === "") {
+    if (String(username).trim() === "") {
       return res.status(400).json({ msg: "You must Enter Username." });
     }
 
@@ -38,12 +38,12 @@ exports.createUser = async (req, res, next) => {
     }
 
     // check pass is not null
-    if (pass.trim() === "") {
+    if (String(pass).trim() === "") {
       return res.status(400).json({ msg: "Please provide Password" });
     }
 
     // check confirmPass is not null
-    if (confirmPass.trim() === "") {
+    if (String(confirmPass).trim() === "") {
       return res.status(400).json({ msg: "Please provide Confirm-Password" });
     }
 
@@ -105,12 +105,12 @@ exports.login = async (req, res, next) => {
     const { username, pass } = req.body;
 
     // check user is not null
-    if (username === "") {
+    if (String(username).trim() === "") {
       return res.status(400).json({ msg: "You must Enter Username." });
     }
 
     // check pass is not null
-    if (pass === "") {
+    if (String(pass) === "") {
       return res.status(400).json({ msg: "Please provide Password" });
     }
 
