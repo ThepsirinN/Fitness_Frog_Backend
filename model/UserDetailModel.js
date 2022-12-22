@@ -17,7 +17,7 @@ const userDetailSchema = new Schema({
     required: true,
     ref: "User",
   },
-  fullName: { type: String, unique: true, required: true },
+  fullName: { type: String, required: true },
   gender: { type: Number, required: true },
   DOB: { type: Date, required: true },
   age: { type: Number, required: true },
