@@ -28,9 +28,9 @@ app.use("/api/v1/user", userRoute);
 app.use("/api/v1/userDetail", userDetailRoute);
 app.use("/api/v1/activities", activitiesRoute);
 
-app.get("/health",async (req,res,next => {
+app.get("/health",async (req,res,next) => {
   return res.status(200).send("ok")
-}))
+})
 
 const server = app.listen(config.port);
 
